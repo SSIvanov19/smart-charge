@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:yee_mobile_app/types/get_device_status_response.dart';
 part 'get_user_devices_response.g.dart';
 
 class GetUserDevicesResponse {
@@ -94,6 +95,9 @@ class Device {
 
   @HiveField(16)
   String ssid;
+
+  @HiveField(17)
+  DeviceStatus? deviceStatus;
 
   Device(
     key, {

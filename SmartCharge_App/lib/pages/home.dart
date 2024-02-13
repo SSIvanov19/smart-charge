@@ -253,7 +253,10 @@ class HomeState extends State<Home> {
     if (!context.mounted) return;
     
     setState(() {
-      items = response.data.devices.toList((entry) => entry.value);
+      items = response.data.devices
+          .toList((entry) => entry.value)
+          .where((element) => element.category == "relay")
+          .toList();
     });
   }
 }

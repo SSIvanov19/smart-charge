@@ -139,7 +139,10 @@ class DevicesState extends State<Devices> {
     var response = await context.read<DeviceService>().getDevices();
 
     setState(() {
-      items = response.data.devices.toList((entry) => entry.value);
+      items = response.data.devices
+          .toList((entry) => entry.value)
+          .where((element) => element.category == "relay")
+          .toList();
       log("${items.length} devices found");
     });
   }

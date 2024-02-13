@@ -3,15 +3,15 @@ import 'package:flutter/widgets.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:yee_mobile_app/pages/devices.dart';
+import 'package:yee_mobile_app/services/device_service.dart';
 import 'package:yee_mobile_app/types/get_user_devices_response.dart';
 
 class DeviceInfo extends StatefulWidget {
   final Device device;
 
-  const DeviceInfo({
-    Key? key,
-    required this.device
-  }) : super(key: key);
+  const DeviceInfo({Key? key, required this.device}) : super(key: key);
 
   @override
   DeviceInfoState createState() => DeviceInfoState();
@@ -25,7 +25,7 @@ class DeviceInfoState extends State<DeviceInfo> {
   late String connectedTo = widget.device.ssid;
   bool isEditing = false;
   String editStateName = "Редактирай";
-  late String deviceType = widget.device.type;
+  late String deviceType = widget.device.name;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +57,7 @@ class DeviceInfoState extends State<DeviceInfo> {
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
                       color: Color.fromARGB(255, 175, 175, 175)),
-                ),
+                )
               ],
             )),
       ),
@@ -125,6 +125,34 @@ class DeviceInfoState extends State<DeviceInfo> {
             ),
           ),
           const SizedBox(height: 20),
+          Text(
+            "Модел: ${widget.device.type}",
+            style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 175, 175, 175)),
+          ),
+          Text(
+            "Статус: ${widget.device.cloudOnline ? "Онлайн" : "Офлайн"}",
+            style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 175, 175, 175)),
+          ),
+          Text(
+            "Температура: ${widget.device.deviceStatus?.temperature}°C",
+            style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 175, 175, 175)),
+          ),
+          Text(
+            "Работи: ${widget.device.deviceStatus?.relays.first.ison}",
+            style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 175, 175, 175)),
+          ),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -165,7 +193,8 @@ class DeviceInfoState extends State<DeviceInfo> {
                   onPressed: () {
                     testCharger(ipController.text);
                   },
-                  child: const Text("Тествай", style: TextStyle(fontSize: 20.0)),
+                  child:
+                      const Text("Тествай", style: TextStyle(fontSize: 20.0)),
                 ),
               ),
               Container(
@@ -201,6 +230,7 @@ class DeviceInfoState extends State<DeviceInfo> {
     super.initState();
     nameController.text = widget.device.name;
     ipController.text = widget.device.ip;
+    onLoad(context);
   }
 
   void testCharger(String ip) async {
@@ -238,13 +268,29 @@ class DeviceInfoState extends State<DeviceInfo> {
         isEditing = false;
         editStateName = "Редактирай";
       });
+
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Charger info has been updated'),
           backgroundColor: Color.fromARGB(255, 110, 220, 95)));
     } else {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('The entered IP did not respond!'),
           backgroundColor: Color.fromARGB(255, 220, 95, 95)));
     }
+  }
+
+  Future<void> onLoad(BuildContext context) async {
+    var response = await context.read<DeviceService>().getDeviceStatus();
+    response.data.devicesStatus
+        .removeWhere((key, value) => key != widget.device.id);
+
+    setState(() {
+      widget.device.deviceStatus = response.data.devicesStatus
+          .toList((entry) => entry.value)
+          .toList()
+          .first;
+    });
   }
 }
