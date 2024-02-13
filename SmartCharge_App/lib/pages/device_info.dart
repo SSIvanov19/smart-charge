@@ -1,12 +1,19 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:yee_mobile_app/pages/devices.dart';
+import 'package:yee_mobile_app/services/authentication_service.dart';
 import 'package:yee_mobile_app/services/device_service.dart';
 import 'package:yee_mobile_app/types/get_user_devices_response.dart';
+import 'package:yee_mobile_app/types/websocket_status_on_change_response.dart'
+    as ws_status_response;
 
 class DeviceInfo extends StatefulWidget {
   final Device device;
@@ -133,21 +140,14 @@ class DeviceInfoState extends State<DeviceInfo> {
                 color: Color.fromARGB(255, 175, 175, 175)),
           ),
           Text(
-            "Статус: ${widget.device.cloudOnline ? "Онлайн" : "Офлайн"}",
+            "Статус: ${widget.device.deviceStatus?.cloud.connected ?? false ? "Онлайн" : "Офлайн"}",
             style: const TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.bold,
                 color: Color.fromARGB(255, 175, 175, 175)),
           ),
           Text(
-            "Температура: ${widget.device.deviceStatus?.temperature}°C",
-            style: const TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 175, 175, 175)),
-          ),
-          Text(
-            "Работи: ${widget.device.deviceStatus?.relays.first.ison}",
+            "Работи: ${widget.device.deviceStatus?.relays.first.ison ?? false}",
             style: const TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.bold,
@@ -282,15 +282,42 @@ class DeviceInfoState extends State<DeviceInfo> {
   }
 
   Future<void> onLoad(BuildContext context) async {
+    var user = Hive.box<User>('user').get('user')!;
+    var userApiUrl = user.userApiUrl.split("//").last;
+    var accessToken = user.accessToken;
+
+    final wsUrl =
+        Uri.parse("wss://$userApiUrl:6113/shelly/wss/hk_sock?t=$accessToken");
+    final channel = WebSocketChannel.connect(wsUrl);
+
+    await channel.ready;
+
+    channel.stream.listen((message) {
+      var wsResponse = ws_status_response.StatusOnChangeResponse.fromJson(
+          jsonDecode(message));
+
+      log("${wsResponse.device.id} ${widget.device.id}");
+      if (wsResponse.device.id == widget.device.id) {
+        if (!context.mounted) return;
+        setState(() {
+          widget.device.deviceStatus = wsResponse.status;
+        });
+      }
+    });
+
+    if (!widget.device.cloudOnline) return;
+
+    if (!context.mounted) return;
+
     var response = await context.read<DeviceService>().getDeviceStatus();
     response.data.devicesStatus
         .removeWhere((key, value) => key != widget.device.id);
 
+    if (!context.mounted) return;
+    if (response.data.devicesStatus.isEmpty) return;
     setState(() {
-      widget.device.deviceStatus = response.data.devicesStatus
-          .toList((entry) => entry.value)
-          .toList()
-          .first;
+      widget.device.deviceStatus =
+          response.data.devicesStatus.toList((entry) => entry.value).first;
     });
   }
 }

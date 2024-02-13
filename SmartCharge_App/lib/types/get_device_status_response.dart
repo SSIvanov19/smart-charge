@@ -104,7 +104,7 @@ class DeviceStatus {
       cfgChangedCnt: json['cfg_changed_cnt'],
       uptime: json['uptime'],
       ramFree: json['ram_free'],
-      updated: json['_updated'],
+      updated: (json['_updated'] ?? ""),
       meters: List<Meter>.from(json['meters'].map((x) => Meter.fromJson(x))),
       mac: json['mac'],
       unixtime: json['unixtime'],
@@ -208,7 +208,7 @@ class Update {
       hasUpdate: json['has_update'],
       newVersion: json['new_version'],
       oldVersion: json['old_version'],
-      betaVersion: json['beta_version'],
+      betaVersion: json['beta_version'] ?? "",
     );
   }
 }
@@ -294,7 +294,7 @@ class Tmp {
   factory Tmp.fromJson(Map<String, dynamic> json) {
     return Tmp(
       tC: json['tC'],
-      tF: json['tF'],
+      tF: (json['tF'] != null ? json['tF'].toDouble() : 0.0),
       isValid: json['is_valid'],
     );
   }

@@ -80,10 +80,12 @@ class DevicesState extends State<Devices> {
                                       MaterialPageRoute(
                                           builder: ((context) => DeviceInfo(
                                               device: items[index]))))
-                                  .then((value) => setState(() {
-                                        items =
-                                            List<Device>.from(items.toList());
-                                      }));
+                                  .then((value) {
+                                if (!context.mounted) return;
+                                setState(() {
+                                  items = List<Device>.from(items.toList());
+                                });
+                              });
                             },
                             child: Stack(children: [
                               Align(
