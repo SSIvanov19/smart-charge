@@ -250,6 +250,8 @@ class HomeState extends State<Home> {
   Future<void> onLoad(BuildContext context) async {
     var response = await context.read<DeviceService>().getDevices();
 
+    if (!context.mounted) return;
+    
     setState(() {
       items = response.data.devices.toList((entry) => entry.value);
     });

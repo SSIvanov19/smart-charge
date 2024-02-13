@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -100,22 +101,30 @@ class AuthenticationService {
   Future<void> tokenCheck(BuildContext context) async {
     final user = Hive.box<User>('user').get('user');
     if (user == null || user.accessToken == "") {
+      log("User is not logged in");
       return;
     }
+
     final nextCheckTime =
         DateTime.now().add(const Duration(seconds: 3 * 60 * 60 + 123));
 
-    if (user.expirationTime.isBefore(nextCheckTime)) {
-      try {
-        await renewToken(user);
-      } catch (error) {
-        await Hive.box<User>('user').deleteFromDisk();
-        await Hive.openBox<User>("user");
+    if (!user.expirationTime.isBefore(nextCheckTime)) return;
 
-        if (!context.mounted) return;
-        GoRouter.of(context).replace("/");
-      }
+    log("Renewing token");
+
+    try {
+      await renewToken(user);
+      log("Token renewed");
+    } catch (error) {
+      log("Error renewing token: $error");
+
+      await Hive.box<User>('user').deleteFromDisk();
+      await Hive.openBox<User>("user");
+
+      if (!context.mounted) return;
+      GoRouter.of(context).replace("/");
     }
+
   }
 
   void startTokenCheck(BuildContext context) {
@@ -124,8 +133,11 @@ class AuthenticationService {
   }
 
   Future<void> renewToken(User user) async {
+    var userApiUrl = user.userApiUrl;
+    var refreshToken = user.refreshToken;
+
     var response = await http.get(Uri.parse(
-        "$user.userApiUrl/oauth/auth?client_id=shelly-diy&grant_type=code&code=$user.refreshToken"));
+        "$userApiUrl/oauth/auth?client_id=shelly-diy&grant_type=code&code=$refreshToken"));
 
     if (response.statusCode != 200) {
       throw Exception('Failed to obtain access token');
@@ -138,7 +150,7 @@ class AuthenticationService {
 
     user.expirationTime = DateTime.now().add(Duration(seconds: expiresIn));
 
-    Hive.box('user').put('user', user);
+    Hive.box<User>('user').put('user', user);
   }
 
   Future<void> signOut(BuildContext context) async {

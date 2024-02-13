@@ -13,6 +13,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'dart:io' show Platform;
 import 'package:flutter_background/flutter_background.dart';
 import 'package:go_router/go_router.dart';
+import 'package:session_next/session_next.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,7 +73,6 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.grey,
           ),
-          //home: const Homepage(),
           routerConfig: router,
         ));
   }
@@ -103,8 +103,14 @@ class AuthenticationWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.read<AuthenticationService>().tokenCheck(context);
-    context.read<AuthenticationService>().startTokenCheck(context);
+    var session = SessionNext();
+    var isAppInit = session.get<bool>('appInit') ?? false;
+
+    if (!isAppInit) {
+      context.read<AuthenticationService>().tokenCheck(context);
+      context.read<AuthenticationService>().startTokenCheck(context);
+      session.set("appInit", true);
+    }
 
     var isUserLoggedIn = Hive.box<User>('user').get('user') != null;
 
