@@ -21,4 +21,23 @@ class DeviceService extends WebApiService {
 
     return GetDeviceStatusResponse.fromJson(jsonDecode(response.body));
   }
+
+  Future<void> setDeviceStatus(String deviceId, bool status) async {
+    var headers = generateHeader();
+    headers.addAll({"Content-Type": "application/x-www-form-urlencoded"});
+
+    var response = await http.post(
+        Uri.parse("${getBaseUrl()}/device/relay/control"),
+        headers: headers,
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          "id": deviceId,
+          "turn": status ? "on" : "off",
+          "channel": "0"
+        });
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to set device status");
+    }
+  }
 }

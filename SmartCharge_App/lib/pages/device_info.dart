@@ -293,6 +293,8 @@ class DeviceInfoState extends State<DeviceInfo> {
     await channel.ready;
 
     channel.stream.listen((message) {
+      if (jsonDecode(message)["event"] != "Shelly:StatusOnChange") return;
+
       var wsResponse = ws_status_response.StatusOnChangeResponse.fromJson(
           jsonDecode(message));
 

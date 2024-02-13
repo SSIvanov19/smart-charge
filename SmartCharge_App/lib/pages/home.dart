@@ -33,7 +33,7 @@ class HomeState extends State<Home> {
   List<String> chargerNames = [];
   late Device? selectedValue = null;
   Timer? _debounce;
-  late String ip = box.get("ip", defaultValue: 0);
+  late String id = box.get("id", defaultValue: "");
 
   @override
   void initState() {
@@ -178,7 +178,7 @@ class HomeState extends State<Home> {
                             box.put('selectedCharger', selectedValue);
                           });
 
-                          setIp(value?.name);
+                          setId(value?.name);
                         },
                       )),
                 ])),
@@ -208,33 +208,18 @@ class HomeState extends State<Home> {
     }
   }
 
-  setIp(chargerName) {
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].name == chargerName) {
-        ip = items[i].ip;
-        box.put('ip', ip);
-        //deviceBox.put(ip, [chargerName, ip, "My Device", "Charger"]);
-      }
-    }
-  }
-
-  sendOffRequest() async {
-    var response = await http.get(Uri.parse('http://$ip/relay/0?turn=off'));
-    _currentPlugState = false;
-  }
-
-  sendOnRequest() async {
-    var response = await http.get(Uri.parse('http://$ip/relay/0?turn=on'));
-    _currentPlugState = true;
+  setId(chargerName) {
+    id = items.firstWhere((element) => element.name == chargerName).id;
+    box.put('id', id);
   }
 
   _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 1000), () {
       if (_batteryLevel >= batteryLimitInt) {
-        sendOffRequest();
+        context.read<DeviceService>().setDeviceStatus(id, false);
       } else {
-        sendOnRequest();
+        context.read<DeviceService>().setDeviceStatus(id, true);
       }
     });
   }
@@ -251,7 +236,6 @@ class HomeState extends State<Home> {
     var response = await context.read<DeviceService>().getDevices();
 
     if (!context.mounted) return;
-    
     setState(() {
       items = response.data.devices
           .toList((entry) => entry.value)

@@ -1,6 +1,3 @@
-import 'package:yee_mobile_app/types/get_device_status_response.dart';
-import 'package:yee_mobile_app/types/get_user_devices_response.dart';
-
 class GetUserSettingsResponse {
   bool isok;
   Data data;

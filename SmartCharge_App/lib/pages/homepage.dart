@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:yee_mobile_app/services/device_service.dart';
 import 'devices.dart';
 import 'home.dart';
 import 'statistics.dart';
@@ -30,7 +32,7 @@ class HomepageState extends State<Homepage> {
   late double batteryLimit = box.get("batteryLimit", defaultValue: 80.0);
   late int batteryLimitInt = batteryLimit.toInt();
   bool? _currentPlugState = false;
-  late String ip = box.get("ip", defaultValue: 0);
+  late String id = box.get("id", defaultValue: "");
   int _pageIndex = 0;
 
   var currentTime = DateTime.now();
@@ -132,24 +134,14 @@ class HomepageState extends State<Homepage> {
         batteryLimitInt = batteryLimit.toInt();
 
         if (_batteryLevel >= batteryLimitInt) {
-          sendOffRequest();
+          context.read<DeviceService>().setDeviceStatus(id, false);
         } else {
           if (battery.temperature! <= 45) {
-            sendOnRequest();
+            context.read<DeviceService>().setDeviceStatus(id, true);
           }
         }
       }
     });
-  }
-
-  sendOffRequest() async {
-    var response = await http.get(Uri.parse('http://$ip/relay/0?turn=off'));
-    _currentPlugState = false;
-  }
-
-  sendOnRequest() async {
-    var response = await http.get(Uri.parse('http://$ip/relay/0?turn=on'));
-    _currentPlugState = true;
   }
 
   getDate() {

@@ -1,4 +1,3 @@
-import 'package:battery_info/enums/charging_status.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
