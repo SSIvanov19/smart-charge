@@ -85,7 +85,7 @@ class CustomDropdownButton2 extends StatelessWidget {
           child: Container(
             alignment: valueAlignment,
             child: Text(
-              item.name,
+              "${item.name} - ${item.cloudOnline ? "online" : "offline"}",
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               style: const TextStyle(
