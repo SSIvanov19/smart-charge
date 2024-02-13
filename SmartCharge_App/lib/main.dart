@@ -1,46 +1,53 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:yee_mobile_app/authentication_service.dart';
+import 'package:yee_mobile_app/pages/oauth_tokens.dart';
+import 'package:yee_mobile_app/services/authentication_service.dart';
+import 'package:yee_mobile_app/services/device_service.dart';
+import 'package:yee_mobile_app/services/user_service.dart';
+import 'package:yee_mobile_app/types/get_user_devices_response.dart';
 import 'pages/login.dart';
 import 'pages/homepage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'firebase_options.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'dart:io' show Platform;
 import 'package:flutter_background/flutter_background.dart';
+import 'package:go_router/go_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
   await Hive.initFlutter();
+  Hive.registerAdapter(UserAdapter());
+  Hive.registerAdapter(DeviceAdapter());
   await Hive.openBox('localDB');
   await Hive.openBox('deviceList');
   await Hive.openBox('statistics');
+  await Hive.openBox<User>('user');
 
-  await Firebase.initializeApp();
-
-  if(Platform.isAndroid) {
+  if (Platform.isAndroid) {
     const androidConfig = FlutterBackgroundAndroidConfig(
       notificationTitle: "flutter_background example app",
-      notificationText: "Background notification for keeping the example app running in the background",
+      notificationText:
+          "Background notification for keeping the example app running in the background",
       notificationImportance: AndroidNotificationImportance.Default,
-      notificationIcon: AndroidResource(name: 'background_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
+      notificationIcon: AndroidResource(
+          name: 'background_icon',
+          defType: 'drawable'), // Default is ic_launcher from folder mipmap
     );
-    bool success = await FlutterBackground.initialize(androidConfig: androidConfig);
+
+    bool success =
+        await FlutterBackground.initialize(androidConfig: androidConfig);
     bool hasPermissions = await FlutterBackground.hasPermissions;
-    if(success && hasPermissions) {
+
+    if (success && hasPermissions) {
       await FlutterBackground.enableBackgroundExecution();
     }
   }
-  if(Platform.isIOS) {
+  if (Platform.isIOS) {
     //background process on IOS
   }
 
@@ -56,33 +63,51 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
         providers: [
           Provider<AuthenticationService>(
-              create: (_) => AuthenticationService(FirebaseAuth.instance)),
-          StreamProvider(
-            create: (context) =>
-                context.read<AuthenticationService>().authStateChanges,
-            initialData: null,
-          )
+              create: (_) => AuthenticationService()),
+          Provider<UserService>(create: (_) => UserService()),
+          Provider<DeviceService>(create: (_) => DeviceService()),
         ],
-        child: MaterialApp(
+        child: MaterialApp.router(
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             primarySwatch: Colors.grey,
           ),
-          home: const Homepage(),
-          //home: const AuthenticationWrapper(),
+          //home: const Homepage(),
+          routerConfig: router,
         ));
   }
 }
+
+final router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (_, __) => AuthenticationWrapper(key: UniqueKey()),
+      routes: [
+        GoRoute(
+          path: 'oauth-tokens',
+          builder: (context, state) {
+            final code = state.uri.queryParameters['code'] ?? '';
+            final stateParam = state.uri.queryParameters['state'] ?? '';
+
+            return OAuthTokens(code: code, state: stateParam);
+          },
+        ),
+      ],
+    ),
+  ],
+);
 
 class AuthenticationWrapper extends StatelessWidget {
   const AuthenticationWrapper({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final firebaseUser = context.watch<User?>();
-    if (firebaseUser != null) {
-      return const Homepage();
-    }
-    return const LoginPage();
+    context.read<AuthenticationService>().tokenCheck(context);
+    context.read<AuthenticationService>().startTokenCheck(context);
+
+    var isUserLoggedIn = Hive.box<User>('user').get('user') != null;
+
+    return isUserLoggedIn ? const Homepage() : const LoginPage();
   }
 }

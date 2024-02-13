@@ -1,4 +1,4 @@
-package com.example.yee_mobile_app
+package com.codingburgas.smartcharge
 
 import io.flutter.embedding.android.FlutterActivity
 

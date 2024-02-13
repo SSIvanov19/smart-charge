@@ -95,7 +95,9 @@ class HomepageState extends State<Homepage> {
                 tabs: const [
                   GButton(icon: LineIcons.home, text: 'Начало', iconSize: 26),
                   GButton(
-                      icon: LineIcons.folderOpenAlt, text: 'Център', iconSize: 26),
+                      icon: LineIcons.folderOpenAlt,
+                      text: 'Устройства',
+                      iconSize: 26),
                   GButton(
                       icon: LineIcons.pieChart,
                       text: 'Ститистики',
@@ -116,23 +118,28 @@ class HomepageState extends State<Homepage> {
 
   getBatteryLevel() async {
     final battery = (await BatteryInfoPlugin().androidBatteryInfo);
-    if (mounted) {
-      setState(() {
-        if (battery?.batteryLevel != _batteryLevel) {
-          _batteryLevel = battery!.batteryLevel!.toInt();
-          box.put('batteryLevel', _batteryLevel);
-          batteryLimit = box.get("batteryLimit", defaultValue: 80.0);
-          batteryLimitInt = batteryLimit.toInt();
-          if (_batteryLevel >= batteryLimitInt) {
-            sendOffRequest();
-          } else {
-            if (battery.temperature! <= 45) {
-              sendOnRequest();
-            }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      if (battery?.batteryLevel != _batteryLevel) {
+        _batteryLevel = battery!.batteryLevel!.toInt();
+        box.put('batteryLevel', _batteryLevel);
+
+        batteryLimit = box.get("batteryLimit", defaultValue: 80.0);
+        batteryLimitInt = batteryLimit.toInt();
+
+        if (_batteryLevel >= batteryLimitInt) {
+          sendOffRequest();
+        } else {
+          if (battery.temperature! <= 45) {
+            sendOnRequest();
           }
         }
-      });
-    }
+      }
+    });
   }
 
   sendOffRequest() async {
@@ -146,15 +153,22 @@ class HomepageState extends State<Homepage> {
   }
 
   getDate() {
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       currentTime = DateTime.now();
       calculateDailySavings();
+
       if (lastStatisticsHour != currentTime.hour) {
         currentDay = DateFormat('EEEE').format(DateTime.now());
         lastStatisticsHour = currentTime.hour;
+
         if (currentTime.hour == 0) {
           statisticsBox.deleteAll(statisticsBox.keys);
         }
+
         statisticsBox.put('lastStatisticsHour', currentTime.hour);
         statisticsBox.put(currentTime.hour, _batteryLevel);
       }
@@ -163,8 +177,10 @@ class HomepageState extends State<Homepage> {
 
   calculateDailySavings() {
     var dailySavings = 0.0;
+
     for (int i = 0; i < 24; i++) {
       double batteryGained = 0;
+
       if (i != 0) {
         batteryGained = statisticsBox.get(i, defaultValue: 0).toDouble() -
             statisticsBox.get((i - 1), defaultValue: 0).toDouble();
@@ -174,6 +190,7 @@ class HomepageState extends State<Homepage> {
         dailySavings += (batteryGained * 0.05);
       }
     }
+
     statisticsBox.put(currentDay, dailySavings);
   }
 }

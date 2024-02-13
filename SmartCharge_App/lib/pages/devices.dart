@@ -1,6 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'add_cherger.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:yee_mobile_app/services/device_service.dart';
+import 'package:yee_mobile_app/types/get_user_devices_response.dart';
+import 'add_charger.dart';
 import 'device_info.dart';
 import 'package:animations/animations.dart';
 
@@ -12,8 +17,10 @@ class Devices extends StatefulWidget {
 }
 
 class DevicesState extends State<Devices> {
+  /*
   final listBox = Hive.box('deviceList');
-  late List<dynamic> items = listBox.values.toList();
+  */
+  late List<Device> items = List<Device>.empty(growable: true);
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +46,7 @@ class DevicesState extends State<Devices> {
             )),
       ),
       body: Center(
-        child: Column(
+          child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -60,32 +67,32 @@ class DevicesState extends State<Devices> {
                                   const Color.fromARGB(255, 34, 34, 34),
                               backgroundColor: const Color(0xffE8ECED),
                               side: const BorderSide(
-                                  color: Color(0xff01B399),
-                                  width: 1.5),
+                                  color: Color(0xff01B399), width: 1.5),
                               minimumSize: Size(screenWidth * 0.67, 60),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15)),
                             ),
                             onPressed: () {
                               // listBox.deleteAll(listBox.keys);
+
                               Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                           builder: ((context) => DeviceInfo(
-                                              deviceName: items[index][0],
-                                              deviceIP: items[index][1],
-                                              deviceConnected: items[index][2],
-                                              deviceType: items[index][3]))))
+                                              device: items[index]))))
                                   .then((value) => setState(() {
-                                        items = List<dynamic>.from(
-                                            listBox.values.toList());
+                                        items =
+                                            List<Device>.from(items.toList());
                                       }));
                             },
                             child: Stack(children: [
                               Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text(items[index][0],
-                                    style: const TextStyle(fontSize: 23.0, color: Color.fromARGB(255, 47, 74, 71))),
+                                child: Text(items[index].name,
+                                    style: const TextStyle(
+                                        fontSize: 23.0,
+                                        color:
+                                            Color.fromARGB(255, 47, 74, 71))),
                               ),
                               const Align(
                                 alignment: Alignment.centerRight,
@@ -110,7 +117,7 @@ class DevicesState extends State<Devices> {
         closedShape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(50))),
         onClosed: (value) => setState(() {
-          items = List<dynamic>.from(listBox.values.toList());
+          //items = List<dynamic>.from(listBox.values.toList());
         }),
         transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
@@ -124,7 +131,27 @@ class DevicesState extends State<Devices> {
             child: const Icon(Icons.add),
           );
         },
-      ),  
+      ),
     );
   }
+
+  Future<void> onLoad(BuildContext context) async {
+    var response = await context.read<DeviceService>().getDevices();
+
+    setState(() {
+      items = response.data.devices.toList((entry) => entry.value);
+      log("${items.length} devices found");
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    onLoad(context);
+  }
+}
+
+extension ListFromMap<Key, Element> on Map<Key, Element> {
+  List<T> toList<T>(T Function(MapEntry<Key, Element> entry) getElement) =>
+      entries.map(getElement).toList();
 }

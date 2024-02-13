@@ -4,11 +4,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'package:yee_mobile_app/pages/devices.dart';
+import 'package:yee_mobile_app/services/device_service.dart';
+import 'package:yee_mobile_app/types/get_user_devices_response.dart';
 import '../components/dropdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'add_cherger.dart';
-import 'dart:convert';
+import 'add_charger.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -19,8 +22,6 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   final box = Hive.box('localDB');
-  final deviceBox = Hive.box('deviceList');
-
   final Battery _battery = Battery();
   StreamSubscription<BatteryState>? _batteryStateSubscription;
   late int _batteryLevel = box.get("batteryLevel", defaultValue: 0);
@@ -28,15 +29,16 @@ class HomeState extends State<Home> {
   late int batteryLimitInt = batteryLimit.toInt();
   late Timer timer;
   bool? _currentPlugState = false;
-  late List<dynamic> items = deviceBox.values.toList();
+  late List<Device> items = List<Device>.empty(growable: true);
   List<String> chargerNames = [];
-  late String? selectedValue = box.get("selectedCharger", defaultValue: null);
+  late Device? selectedValue = null;
   Timer? _debounce;
   late String ip = box.get("ip", defaultValue: 0);
 
   @override
   void initState() {
     super.initState();
+    onLoad(context);
     transformList();
     Timer.periodic(const Duration(seconds: 1), (timer) {
       getBatteryLevel();
@@ -149,6 +151,8 @@ class HomeState extends State<Home> {
                   GestureDetector(
                       onTap: () {
                         if (items.isEmpty == true) {
+                          // Open Shelly app
+                          /*
                           Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -159,20 +163,22 @@ class HomeState extends State<Home> {
                                         deviceBox.values.toList());
                                     transformList();
                                   }));
+                                  */
                         }
                       },
                       child: CustomDropdownButton2(
                         hint: (items.isEmpty == true)
                             ? 'Add Charger'
                             : 'Select Charger',
-                        dropdownItems: chargerNames,
+                        dropdownItems: items,
                         value: selectedValue,
                         onChanged: (value) {
                           setState(() {
                             selectedValue = value;
                             box.put('selectedCharger', selectedValue);
                           });
-                          setIp(value);
+
+                          setIp(value?.name);
                         },
                       )),
                 ])),
@@ -204,10 +210,10 @@ class HomeState extends State<Home> {
 
   setIp(chargerName) {
     for (var i = 0; i < items.length; i++) {
-      if (items[i][0] == chargerName) {
-        ip = items[i][1];
+      if (items[i].name == chargerName) {
+        ip = items[i].ip;
         box.put('ip', ip);
-        deviceBox.put(ip, [chargerName, ip, "My Device", "Charger"]);
+        //deviceBox.put(ip, [chargerName, ip, "My Device", "Charger"]);
       }
     }
   }
@@ -236,8 +242,16 @@ class HomeState extends State<Home> {
   transformList() {
     for (int i = 0; i < items.length; ++i) {
       setState(() {
-        chargerNames.add(items[i][0]);
+        chargerNames.add(items[i].name);
       });
     }
+  }
+
+  Future<void> onLoad(BuildContext context) async {
+    var response = await context.read<DeviceService>().getDevices();
+
+    setState(() {
+      items = response.data.devices.toList((entry) => entry.value);
+    });
   }
 }

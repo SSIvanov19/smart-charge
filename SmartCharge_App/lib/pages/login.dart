@@ -1,10 +1,7 @@
-// make login page
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../authentication_service.dart';
+import '../services/authentication_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -14,9 +11,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,84 +36,19 @@ class LoginPageState extends State<LoginPage> {
         children: [
           Container(
             padding: const EdgeInsets.only(top: 50),
-            child: const Text(
-              'Email',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 57, 57, 57)),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(top: 10),
-            width: 350,
-            child: TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Email',
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(top: 50),
-            child: const Text(
-              'Password',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 57, 57, 57)),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(top: 10),
-            width: 350,
-            child: TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Password',
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(top: 50),
             child: ElevatedButton(
               onPressed: () async {
                 try {
-                  await context.read<AuthenticationService>().signIn(
-                        email: _emailController.text.trim(),
-                        password: _passwordController.text.trim(),
-                      );
-                } on FirebaseAuthException catch (e) {
+                  await context.read<AuthenticationService>().signIn(context);
+                } on Exception catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(e.message!),
+                      content: Text(e.toString()),
                     ),
                   );
                 }
               },
-              child: const Text('Login'),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(top: 20),
-            child: ElevatedButton(
-              onPressed: () async {
-                try {
-                  await context.read<AuthenticationService>().signUp(
-                        email: _emailController.text.trim(),
-                        password: _passwordController.text.trim(),
-                      );
-                } on FirebaseAuthException catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(e.message!),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Sign up'),
+              child: const Text('Login with your Shelly account'),
             ),
           ),
         ],

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:yee_mobile_app/types/get_user_devices_response.dart';
 
 class CustomDropdownButton2 extends StatelessWidget {
   final String hint;
-  final String? value;
-  final List<String> dropdownItems;
-  final ValueChanged<String?>? onChanged;
+  final Device? value;
+  final List<Device> dropdownItems;
+  final ValueChanged<Device?>? onChanged;
   final DropdownButtonBuilder? selectedItemBuilder;
   final Alignment? hintAlignment;
   final Alignment? valueAlignment;
@@ -62,7 +63,7 @@ class CustomDropdownButton2 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonHideUnderline(
-      child: DropdownButton2(
+      child: DropdownButton2<Device>(
         //To avoid long text overflowing.
         isExpanded: true,
         hint: Container(
@@ -79,12 +80,12 @@ class CustomDropdownButton2 extends StatelessWidget {
         ),
         value: value,
         items: dropdownItems
-                .map((item) => DropdownMenuItem<String>(
+                .map((item) => DropdownMenuItem<Device>(
           value: item,
           child: Container(
             alignment: valueAlignment,
             child: Text(
-              item,
+              item.name,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               style: const TextStyle(

@@ -141,7 +141,7 @@ class AddChargerState extends State<AddCharger> {
     }
   }
 
-    void pingIp(ip) async {
+  void pingIp(ip) async {
     var response = await http
         .get(Uri.parse('http://$ip/rpc/Shelly.GetStatus'))
         .timeout(const Duration(seconds: 2), onTimeout: () {
@@ -160,19 +160,10 @@ class AddChargerState extends State<AddCharger> {
         .timeout(const Duration(seconds: 2), onTimeout: () {
       return http.Response("Request Timed Out", 408);
     });
-    if (response.body == "Not Found") {
-      var device = "None";
-      var type = "Charger";
-      deviceBox.put(ip, [name, ip, device, type]);
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Charger not found'),
-        duration: Duration(seconds: 3),
-        backgroundColor: Colors.red,
-      ));
-    }
+    var device = "None";
+    var type = "Charger";
+    deviceBox.put(ip, [name, ip, device, type]);
+    // ignore: use_build_context_synchronously
+    Navigator.pop(context);
   }
 }

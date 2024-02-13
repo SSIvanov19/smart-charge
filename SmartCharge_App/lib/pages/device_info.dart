@@ -3,18 +3,14 @@ import 'package:flutter/widgets.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:yee_mobile_app/types/get_user_devices_response.dart';
 
 class DeviceInfo extends StatefulWidget {
-  final String deviceName;
-  final String deviceIP;
-  final String deviceConnected;
-  final String deviceType;
+  final Device device;
+
   const DeviceInfo({
     Key? key,
-    required this.deviceName,
-    required this.deviceIP,
-    required this.deviceConnected,
-    required this.deviceType,
+    required this.device
   }) : super(key: key);
 
   @override
@@ -26,10 +22,10 @@ class DeviceInfoState extends State<DeviceInfo> {
   final box = Hive.box('localDB');
   var nameController = TextEditingController();
   var ipController = TextEditingController();
-  late String connectedTo = widget.deviceConnected;
+  late String connectedTo = widget.device.ssid;
   bool isEditing = false;
   String editStateName = "Редактирай";
-  late String deviceType = widget.deviceType;
+  late String deviceType = widget.device.type;
 
   @override
   Widget build(BuildContext context) {
@@ -183,8 +179,8 @@ class DeviceInfoState extends State<DeviceInfo> {
                         borderRadius: BorderRadius.circular(100)),
                   ),
                   onPressed: () {
-                    deviceBox.delete(widget.deviceIP);
-                    if (widget.deviceName ==
+                    deviceBox.delete(widget.device.ip);
+                    if (widget.device.name ==
                         box.get("selectedCharger").toString()) {
                       box.delete("selectedCharger");
                     }
@@ -203,8 +199,8 @@ class DeviceInfoState extends State<DeviceInfo> {
   @override
   void initState() {
     super.initState();
-    nameController.text = widget.deviceName;
-    ipController.text = widget.deviceIP;
+    nameController.text = widget.device.name;
+    ipController.text = widget.device.ip;
   }
 
   void testCharger(String ip) async {
@@ -231,12 +227,12 @@ class DeviceInfoState extends State<DeviceInfo> {
       return http.Response("Request Timed Out", 408);
     });
     if (response.body == "Not Found") {
-      deviceBox.delete(widget.deviceIP);
+      deviceBox.delete(widget.device.ip);
       deviceBox.put(ipController.text, [
         nameController.text,
         ipController.text,
-        widget.deviceConnected,
-        widget.deviceType
+        widget.device.ssid,
+        widget.device.ip
       ]);
       setState(() {
         isEditing = false;
