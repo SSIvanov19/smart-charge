@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -177,6 +179,7 @@ class StatisticsState extends State<Statistics> {
             const SizedBox(
               height: 15,
             ),
+            if (Platform.isAndroid)
             AspectRatio(
               aspectRatio: 2.1,
               child: Card(

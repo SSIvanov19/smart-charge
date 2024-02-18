@@ -11,7 +11,6 @@ import 'package:yee_mobile_app/services/device_service.dart';
 import 'package:yee_mobile_app/types/get_user_devices_response.dart';
 import '../components/dropdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'add_charger.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -66,124 +65,126 @@ class HomeState extends State<Home> {
             )),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularPercentIndicator(
-              radius: 120.0,
-              lineWidth: 9.0,
-              animation: true,
-              animateFromLastPercent: true,
-              percent: _batteryLevel.toDouble() / 100,
-              rotateLinearGradient: _batteryLevel != 100 ? true : false,
-              center: Text(
-                '$_batteryLevel%',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 50.0,
-                    color: Color.fromARGB(255, 57, 57, 57)),
-              ),
-              circularStrokeCap: CircularStrokeCap.round,
-              linearGradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.fromARGB(255, 38, 224, 155),
-                  Color(0xff01B399),
-                ],
-              ),
-            ),
-            const SizedBox(height: 62),
-            Container(
-                alignment: Alignment.centerLeft,
-                width: 250,
-                child: Text(
-                  'Зареждане до: $batteryLimitInt%',
+        child: ListView(
+          children: [Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularPercentIndicator(
+                radius: 120.0,
+                lineWidth: 9.0,
+                animation: true,
+                animateFromLastPercent: true,
+                percent: _batteryLevel.toDouble() / 100,
+                rotateLinearGradient: _batteryLevel != 100 ? true : false,
+                center: Text(
+                  '$_batteryLevel%',
                   style: const TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 57, 57, 57),
-                      fontWeight: FontWeight.bold),
-                )),
-            SizedBox(
-              width: 290,
-              child: SfSlider(
-                min: 60,
-                max: 100,
-                value: batteryLimit,
-                interval: 40,
-                showLabels: true,
-                labelFormatterCallback: (actualValue, formattedText) =>
-                    formattedText
-                        .toString()
-                        .replaceAll('60', '60%')
-                        .replaceAll('100', '100%'),
-                showTicks: false,
-                // enableTooltip: true,
-                // tooltipShape: const SfPaddleTooltipShape(),
-                activeColor: const Color(0xff01B399),
-                inactiveColor: const Color.fromARGB(255, 184, 199, 203),
-                minorTicksPerInterval: 1,
-                onChanged: (dynamic value) {
-                  setState(() {
-                    batteryLimit = value;
-                    batteryLimitInt = batteryLimit.toInt();
-                    box.put('batteryLimit', batteryLimit);
-                  });
-                  _onSearchChanged();
-                },
+                      fontWeight: FontWeight.bold,
+                      fontSize: 50.0,
+                      color: Color.fromARGB(255, 57, 57, 57)),
+                ),
+                circularStrokeCap: CircularStrokeCap.round,
+                linearGradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.fromARGB(255, 38, 224, 155),
+                    Color(0xff01B399),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 44),
-            Container(
-                width: 250,
-                alignment: Alignment.centerLeft,
-                child: const Text(
-                  'Умен контакт',
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 57, 57, 57),
-                      fontWeight: FontWeight.bold),
-                )),
-            SizedBox(
-                width: 250,
-                child: Column(children: [
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                      onTap: () {
-                        if (items.isEmpty == true) {
-                          // Open Shelly app
-                          /*
-                          Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: ((context) =>
-                                          const AddCharger())))
-                              .then((value) => setState(() {
-                                    items = List<dynamic>.from(
-                                        deviceBox.values.toList());
-                                    transformList();
-                                  }));
-                                  */
-                        }
-                      },
-                      child: CustomDropdownButton2(
-                        hint: (items.isEmpty == true)
-                            ? 'Add Charger'
-                            : 'Select Charger',
-                        dropdownItems: items,
-                        value: selectedValue,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedValue = value;
-                            box.put('selectedCharger', selectedValue);
-                          });
-
-                          setId(value?.name);
+              const SizedBox(height: 62),
+              Container(
+                  alignment: Alignment.centerLeft,
+                  width: 250,
+                  child: Text(
+                    'Зареждане до: $batteryLimitInt%',
+                    style: const TextStyle(
+                        fontSize: 20,
+                        color: Color.fromARGB(255, 57, 57, 57),
+                        fontWeight: FontWeight.bold),
+                  )),
+              SizedBox(
+                width: 290,
+                child: SfSlider(
+                  min: 60,
+                  max: 100,
+                  value: batteryLimit,
+                  interval: 40,
+                  showLabels: true,
+                  labelFormatterCallback: (actualValue, formattedText) =>
+                      formattedText
+                          .toString()
+                          .replaceAll('60', '60%')
+                          .replaceAll('100', '100%'),
+                  showTicks: false,
+                  // enableTooltip: true,
+                  // tooltipShape: const SfPaddleTooltipShape(),
+                  activeColor: const Color(0xff01B399),
+                  inactiveColor: const Color.fromARGB(255, 184, 199, 203),
+                  minorTicksPerInterval: 1,
+                  onChanged: (dynamic value) {
+                    setState(() {
+                      batteryLimit = value;
+                      batteryLimitInt = batteryLimit.toInt();
+                      box.put('batteryLimit', batteryLimit);
+                    });
+                    _onSearchChanged();
+                  },
+                ),
+              ),
+              const SizedBox(height: 44),
+              Container(
+                  width: 250,
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    'Умен контакт',
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Color.fromARGB(255, 57, 57, 57),
+                        fontWeight: FontWeight.bold),
+                  )),
+              SizedBox(
+                  width: 250,
+                  child: Column(children: [
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                        onTap: () {
+                          if (items.isEmpty == true) {
+                            // Open Shelly app
+                            /*
+                            Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: ((context) =>
+                                            const AddCharger())))
+                                .then((value) => setState(() {
+                                      items = List<dynamic>.from(
+                                          deviceBox.values.toList());
+                                      transformList();
+                                    }));
+                                    */
+                          }
                         },
-                      )),
-                ])),
-          ],
-        ),
+                        child: CustomDropdownButton2(
+                          hint: (items.isEmpty == true)
+                              ? 'Добави устройство'
+                              : 'Избери устройстао',
+                          dropdownItems: items,
+                          value: selectedValue,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedValue = value;
+                              box.put('selectedCharger', selectedValue);
+                            });
+          
+                            setId(value?.name);
+                          },
+                        )),
+                  ])),
+            ],
+          ),
+        ]),
       ),
     );
   }

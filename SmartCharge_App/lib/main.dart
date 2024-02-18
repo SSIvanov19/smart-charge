@@ -14,6 +14,8 @@ import 'dart:io' show Platform;
 import 'package:flutter_background/flutter_background.dart';
 import 'package:go_router/go_router.dart';
 import 'package:session_next/session_next.dart';
+import 'package:uni_links_desktop/uni_links_desktop.dart';
+import 'package:uni_links/uni_links.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,12 +50,34 @@ void main() async {
       await FlutterBackground.enableBackgroundExecution();
     }
   }
-  if (Platform.isIOS) {
-    //background process on IOS
+  if (Platform.isWindows) {
+    registerProtocol('com.codingburgas.smartcharge');
   }
 
   runApp(const MyApp());
   FlutterNativeSplash.remove();
+}
+
+void initUniLinks(BuildContext context) async {
+  try {
+    final initialLink = await getInitialLink();
+    if (initialLink != null) {
+      // Handle the initial link here
+      print('Initial link: $initialLink');
+    }
+  } on Exception catch (e) {
+    print('Error initializing uni_links: $e');
+  }
+
+  // Listen for incoming links
+  linkStream.listen((link) {
+    // Handle the link here
+    print('Received link: $link');
+    final codeParam = Uri.parse(link!).queryParameters['code'] ?? '';
+    final stateParam = Uri.parse(link).queryParameters['state'] ?? '';
+
+    GoRouter.of(context).go("/oauth-tokens?code=$codeParam&state=$stateParam");
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -103,6 +127,9 @@ class AuthenticationWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Platform.isWindows) {
+      initUniLinks(context);
+    }
     var session = SessionNext();
     var isAppInit = session.get<bool>('appInit') ?? false;
 

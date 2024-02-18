@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yee_mobile_app/services/user_service.dart';
 import '../services/authentication_service.dart';
+import 'account_settings.dart';
 
 class Account extends StatefulWidget {
   const Account({Key? key}) : super(key: key);
@@ -41,8 +42,7 @@ class AccountState extends State<Account> {
                   color: Color.fromARGB(255, 57, 57, 57)),
             )),
       ),
-      body: Center(
-          child: Column(
+      body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Center(
@@ -85,7 +85,12 @@ class AccountState extends State<Account> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15)),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: ((context) => const ProfileSettingsPage())));
+                    },
                     child: const Stack(children: [
                       Align(
                         alignment: Alignment.centerLeft,
@@ -101,6 +106,7 @@ class AccountState extends State<Account> {
                       ),
                     ]),
                   ),
+                  const SizedBox(height: 10),
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color.fromARGB(255, 34, 34, 34),
@@ -153,13 +159,13 @@ class AccountState extends State<Account> {
             height: 10,
           ),
         ],
-      )),
+      ),
     );
   }
 
   Future<void> onLoad(BuildContext context) async {
     var response = await context.read<UserService>().getUserSettings();
-    
+
     setState(() {
       name = response.data.settings.name;
       profilePicture = response.data.settings.avatar;

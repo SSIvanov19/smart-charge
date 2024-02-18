@@ -3,9 +3,9 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:yee_mobile_app/services/device_service.dart';
 import 'package:yee_mobile_app/types/get_user_devices_response.dart';
-import 'add_charger.dart';
 import 'device_info.dart';
 import 'package:animations/animations.dart';
 
@@ -21,6 +21,7 @@ class DevicesState extends State<Devices> {
   final listBox = Hive.box('deviceList');
   */
   late List<Device> items = List<Device>.empty(growable: true);
+  final Uri _url = Uri.parse('https://control.shelly.cloud');
 
   @override
   Widget build(BuildContext context) {
@@ -112,27 +113,13 @@ class DevicesState extends State<Devices> {
           ),
         ],
       )),
-      floatingActionButton: OpenContainer(
-        openColor: const Color.fromARGB(255, 242, 242, 242),
-        closedColor: const Color.fromARGB(255, 242, 242, 242),
-        closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(50))),
-        onClosed: (value) => setState(() {
-          //items = List<dynamic>.from(listBox.values.toList());
-        }),
-        transitionType: ContainerTransitionType.fade,
-        openBuilder: (BuildContext context, VoidCallback _) {
-          return const AddCharger();
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          _launchUrl();
         },
-        closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return FloatingActionButton(
-            onPressed: openContainer,
-            foregroundColor: Colors.white,
-            backgroundColor: const Color(0xff01B399),
-            child: const Icon(Icons.add),
-          );
-        },
+        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xff01B399),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -147,6 +134,12 @@ class DevicesState extends State<Devices> {
           .toList();
       log("${items.length} devices found");
     });
+  }
+
+  Future<void> _launchUrl() async {
+    if (!await launchUrl(_url)) {
+      throw Exception('Could not launch $_url');
+    }
   }
 
   @override
