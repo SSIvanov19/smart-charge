@@ -87,9 +87,10 @@ class AccountState extends State<Account> {
                     ),
                     onPressed: () {
                       Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: ((context) => const ProfileSettingsPage())));
+                          context,
+                          MaterialPageRoute(
+                              builder: ((context) =>
+                                  ProfileSettingsPage(callback: onLoad))));
                     },
                     child: const Stack(children: [
                       Align(

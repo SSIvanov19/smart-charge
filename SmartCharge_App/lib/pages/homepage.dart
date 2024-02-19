@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'statistics.dart';
 import 'account.dart';
 import 'package:intl/intl.dart';
 import 'package:battery_info/battery_info_plugin.dart';
+import 'package:battery_plus/battery_plus.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({Key? key}) : super(key: key);
@@ -119,29 +121,51 @@ class HomepageState extends State<Homepage> {
   }
 
   getBatteryLevel() async {
-    final battery = (await BatteryInfoPlugin().androidBatteryInfo);
-
-    if (!mounted) {
+     if (!mounted) {
       return;
     }
+    if (Platform.isAndroid) {
+      var battery = (await BatteryInfoPlugin().androidBatteryInfo);
+      setState(() {
+        if (battery?.batteryLevel != _batteryLevel) {
+          _batteryLevel = battery!.batteryLevel!.toInt();
+          box.put('batteryLevel', _batteryLevel);
 
-    setState(() {
-      if (battery?.batteryLevel != _batteryLevel) {
-        _batteryLevel = battery!.batteryLevel!.toInt();
-        box.put('batteryLevel', _batteryLevel);
+          batteryLimit = box.get("batteryLimit", defaultValue: 80.0);
+          batteryLimitInt = batteryLimit.toInt();
 
-        batteryLimit = box.get("batteryLimit", defaultValue: 80.0);
-        batteryLimitInt = batteryLimit.toInt();
+          if (_batteryLevel >= batteryLimitInt) {
+            context.read<DeviceService>().setDeviceStatus(id, false);
+          } else {
+            if (battery.temperature! <= 45) {
+              context.read<DeviceService>().setDeviceStatus(id, true);
+            }
+          }
+        }
+      });
+    }
+    if (Platform.isWindows) {
+      int? battery = (await _battery.batteryLevel) as int?;
+      if (battery == null) {
+        return;
+      }
 
-        if (_batteryLevel >= batteryLimitInt) {
-          context.read<DeviceService>().setDeviceStatus(id, false);
-        } else {
-          if (battery.temperature! <= 45) {
+      setState(() {
+        if (battery != _batteryLevel) {
+          _batteryLevel = battery!;
+          box.put('batteryLevel', _batteryLevel);
+
+          batteryLimit = box.get("batteryLimit", defaultValue: 80.0);
+          batteryLimitInt = batteryLimit.toInt();
+
+          if (_batteryLevel >= batteryLimitInt) {
+            context.read<DeviceService>().setDeviceStatus(id, false);
+          } else {
             context.read<DeviceService>().setDeviceStatus(id, true);
           }
         }
-      }
-    });
+      });
+    }
   }
 
   getDate() {

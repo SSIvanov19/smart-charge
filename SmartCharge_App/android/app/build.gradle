@@ -58,7 +58,7 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        manifestPlaceholders['appAuthRedirectScheme'] = "smartcharge" // Add this also using your application ID URI as the based for all your derived URi
+        manifestPlaceholders['appAuthRedirectScheme'] = "smartcharge.stoyan.dev" // Add this also using your application ID URI as the based for all your derived URi
     }
 
     signingConfigs {

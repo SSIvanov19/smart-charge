@@ -147,7 +147,7 @@ class DeviceInfoState extends State<DeviceInfo> {
                 color: Color.fromARGB(255, 175, 175, 175)),
           ),
           Text(
-            "Работи: ${widget.device.deviceStatus?.relays.first.ison ?? false}",
+            widget.device.deviceStatus?.relays.first.ison ?? false ? "Зарежда" : "Не зарежда",
             style: const TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.bold,

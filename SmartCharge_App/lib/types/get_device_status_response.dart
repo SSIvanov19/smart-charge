@@ -257,11 +257,11 @@ class Relay {
 }
 
 class Meter {
-  int power;
+  double power;
   int overpower;
   bool isValid;
   int timestamp;
-  List<int> counters;
+  List<double> counters;
   int total;
 
   Meter(
@@ -274,11 +274,11 @@ class Meter {
 
   factory Meter.fromJson(Map<String, dynamic> json) {
     return Meter(
-      power: json['power'],
+      power: json['power'] + 0.0,
       overpower: json['overpower'],
       isValid: json['is_valid'],
       timestamp: json['timestamp'],
-      counters: List<int>.from(json['counters'].map((x) => x)),
+      counters: List<double>.from(json['counters'].map((x) => x + 0.0)),
       total: json['total'],
     );
   }

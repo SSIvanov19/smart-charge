@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:yee_mobile_app/services/user_service.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
-  const ProfileSettingsPage({Key? key}) : super(key: key);
+  ProfileSettingsPage({Key? key, required this.callback}) : super(key: key);
+
+  Function(BuildContext) callback;
 
   @override
   _ProfileSettingsPageState createState() => _ProfileSettingsPageState();
@@ -9,31 +14,29 @@ class ProfileSettingsPage extends StatefulWidget {
 
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   late TextEditingController _nameController;
-  late TextEditingController _profilePictureController;
+  //late TextEditingController _profilePictureController;
   bool _isEditable = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with default values or retrieved values
-    _nameController = TextEditingController(text: "John Doe"); // Replace with retrieved name
-    _profilePictureController = TextEditingController(text: "https://example.com/profile.jpg"); // Replace with retrieved profile picture URL
+    onLoad(context);
+    _nameController = TextEditingController(text: "");
+    // _profilePictureController = TextEditingController(text: "https://example.com/profile.jpg");
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _profilePictureController.dispose();
+    //_profilePictureController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile Settings'),
+        title: const Text('Настройки на профила'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -46,8 +49,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               child: Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'Change Username',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 4),
+                  'Промени потребителско име',
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4),
                 ),
               ),
             ),
@@ -57,7 +63,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 suffixIcon: IconButton(
                   icon: Icon(_isEditable ? Icons.lock : Icons.edit),
                   onPressed: () {
@@ -71,20 +78,29 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                // Call API or perform necessary actions to change the username
-                // Use _nameController.text to get the new name
+              onPressed: () async {
+                await context
+                    .read<UserService>()
+                    .setUsername(_nameController.text);
+
+                if (!context.mounted) return;
+                widget.callback(context);
+                context.pop();
               },
-              child: const Text('Save Username'),
+              child: const Text('Запази промените'),
             ),
             const SizedBox(height: 40),
+            /*
             const Align(
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'Change Profile Picture URL',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 4),
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4),
                 ),
               ),
             ),
@@ -94,7 +110,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 suffixIcon: IconButton(
                   icon: Icon(_isEditable ? Icons.lock : Icons.edit),
                   onPressed: () {
@@ -114,9 +131,18 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               },
               child: const Text('Save Profile Picture URL'),
             ),
+            */
           ],
         ),
       ),
     );
+  }
+
+  Future<void> onLoad(BuildContext context) async {
+    var response = await context.read<UserService>().getUserSettings();
+
+    setState(() {
+      _nameController.text = response.data.settings.name;
+    });
   }
 }
