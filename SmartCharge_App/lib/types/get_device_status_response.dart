@@ -35,7 +35,7 @@ class Data {
 }
 
 class DeviceStatus {
-  GetInfo getInfo;
+  GetInfo? getInfo;
   ActionsStats actionsStats;
   double temperature;
   bool hasUpdate;
@@ -119,7 +119,10 @@ class GetInfo {
 
   GetInfo({required this.fwInfo});
 
-  factory GetInfo.fromJson(Map<String, dynamic> json) {
+  factory GetInfo.fromJson(Map<String, dynamic>? json) {
+    if (json ==null) {
+      return GetInfo(fwInfo: FwInfo(device: "", fw: ""));
+    }
     return GetInfo(
       fwInfo: FwInfo.fromJson(json['fw_info']),
     );
